@@ -3,6 +3,10 @@
 include_directories(include)
 
 add_subdirectory(tpie)
-add_executable(main main.cpp)
-target_link_libraries(main tpie)
+find_package(SDL2)
+
+file(GLOB SOURCES "src/*.cpp")
+
+add_executable(main ${SOURCES})
+target_link_libraries(main tpie SDL2)
 

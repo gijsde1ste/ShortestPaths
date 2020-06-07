@@ -19,8 +19,8 @@ public:
         , frontBuffer(buffer_size(blockFactor))
         , backBuffer(buffer_size(blockFactor))
         , frontBufferItems(0)
-        , frontBufferBegin(0)
         , backBufferItems(0)
+        , frontBufferBegin(0)
         , backBufferBegin(0)
     {
         frontStream.open(static_cast<memory_size_type>(0), access_normal,
@@ -52,10 +52,18 @@ public:
     }
 
 	inline const T & peekFront() {
-		if (frontBufferItems) return frontBuffer[frontBufferItems-1];
-		frontBuffer[0] = frontStream.read_back();
-		frontStream.read();
-		return frontBuffer[0];
+		if (frontBufferItems - frontBufferBegin) return frontBuffer[frontBufferItems-1];
+		if (!frontEmpty()){
+            frontBuffer[0] = frontStream.read_back();
+            frontStream.read();
+            return frontBuffer[0];
+		} else {
+            if (backStream.offset() == 0) return backBuffer[backBufferBegin];
+            else {
+                split(false);
+                return peekFront();
+            }
+		}
 	}
 
     inline void pushBack(const T & t)
@@ -78,10 +86,18 @@ public:
     }
 
 	inline const T & peekBack() {
-		if (backBufferItems) return backBuffer[backBufferItems-1];
-		backBuffer[0] = backStream.read_back();
-		backStream.read();
-		return backBuffer[0];
+		if (backBufferItems - backBufferBegin) return backBuffer[backBufferItems-1];
+		if (!backEmpty()){
+            backBuffer[0] = backStream.read_back();
+            backStream.read();
+            return backBuffer[0];
+		} else {
+            if (frontStream.offset() == 0) return frontBuffer[frontBufferBegin];
+            else {
+                split(true);
+                return peekBack();
+            }
+		}
 	}
 
     stream_size_type size() const {
