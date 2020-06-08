@@ -24,6 +24,7 @@ class Triangulation
         Edge commonEdge(Node a, Node b);
         void createPath(Point_2 target);
         Point_2 getRandomPoint();
+        bool containsPoint(Point_2 points[3], Point_2 p);
         bool finished();
         std::vector<Triangle> copyPolygon();
 

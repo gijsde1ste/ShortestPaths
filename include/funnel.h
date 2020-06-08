@@ -4,23 +4,30 @@
 #include <definition.h>
 #include <tpie/stack.h>
 #include <deque.h>
+#include <Triangulation.h>
 
 
 class funnel
 {
     public:
-        funnel(Edge e) {
-            Point_2 source = e.a;
-            Point_2 p = e.b;
-
-            cusp = tpie::deque<Point_2>();
-            cusp.pushFront(source);
-            apex = cusp.peekFront();
-
-            if (p.x < source.x) cusp.pushFront(p);
-            else cusp.pushBack(p);
-
+        funnel(Node source, Edge e) {
             geodesic = tpie::stack<Point_2>();
+            cusp = tpie::deque<Point_2>();
+
+            for (int i = 0; i < 3; i++){
+                apex = source.points[i];
+                if (!(apex == e.a) && !(apex == e.b)) break;
+            }
+            cusp.pushFront(apex);
+
+            if (rightTurn(e.a, apex, e.b))
+            {
+                cusp.pushFront(e.a);
+                cusp.pushBack(e.b);
+            } else {
+                cusp.pushFront(e.b);
+                cusp.pushBack(e.a);
+            }
         }
 
         inline void extend(Edge e){
@@ -36,6 +43,38 @@ class funnel
                 extend(a, false);
             } else if (b == cusp.peekBack()){
                 extend(a, true);
+            }
+        }
+
+        inline void extendFinalStep(Point_2 target){
+            // This is a little bit backwards because points have to be added in the right order
+            // So first skip through the "wrong" side till we find the apex then add the rest
+            bool apexFound = false;
+            if (target.distance(cusp.peekFront()) < target.distance(cusp.peekBack()))
+            {
+                extend(target, true);
+                Point_2 p;
+                while (cusp.size()){
+                    p = cusp.popBack();
+
+                    if (p == apex) apexFound = true;
+
+                    if (apexFound) geodesic.push(p);
+
+
+                }
+            }
+            else
+            {
+                extend(target, false);
+                Point_2 p;
+                while (cusp.size()){
+                    p = cusp.popFront();
+
+                    if (p == apex) apexFound = true;
+
+                    if (apexFound) geodesic.push(p);
+                }
             }
         }
 

@@ -13,23 +13,24 @@ int main() {
 	tpie::get_memory_manager().set_limit(available_memory_mb*1024*1024);
 
     Triangulation t;
-    t.open("128.tpie");
+    t.open("test.tpie");
 
     Point_2 target = t.getRandomPoint();
     std::cout << "Target: " << target.x << " " << target.y  << std::endl;
     t.createPath(target);
 
-    funnel f = funnel(t.getNextEdge());
+    funnel f = funnel(t.getRoot(), t.getNextEdge());
     while (!t.finished()){
         f.extend(t.getNextEdge());
     }
+    f.extendFinalStep(target);
 
-    //std::vector<Triangle> triangles = t.copyPolygon();
+    std::vector<Triangle> triangles = t.copyPolygon();
 
     t.close();
 
-    //Renderer renderer;
-    //renderer.draw(f, triangles);
+    Renderer renderer;
+    renderer.draw(f, triangles);
 
     tpie::tpie_finish();
 

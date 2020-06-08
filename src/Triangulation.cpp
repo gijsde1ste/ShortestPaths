@@ -30,10 +30,22 @@ Node Triangulation::getNode(int index)
 
 Point_2 Triangulation::getRandomPoint()
 {
-    int triangleIndex = rand() % in.size();
-    int vertexIndex = rand() % 3;
+    Node source = getRoot();
+    Point_2 result;
+    while (true){
+        int triangleIndex = rand() % in.size();
+        int vertexIndex = rand() % 3;
+        result = getNode(triangleIndex).points[vertexIndex];
 
-    return getNode(triangleIndex).points[vertexIndex];
+        // if the random point we found is not part of source triangle
+        if (!containsPoint(source.points, result)) break;
+    }
+
+    return result;
+}
+
+bool Triangulation::containsPoint(Point_2 points[3], Point_2 p){
+    return (p == points[0] || p == points[1] || p == points[2]);
 }
 
 void Triangulation::createPath(Point_2 target){
@@ -108,6 +120,7 @@ std::vector<Triangle> Triangulation::copyPolygon(){
     Node n;
     while (in.can_read()){
         Node n = in.read();
+        //std::cout << n.postOrder << std::endl;
         result.push_back(Triangle{n.points[0], n.points[1], n.points[2]});
     }
 

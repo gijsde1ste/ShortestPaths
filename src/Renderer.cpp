@@ -17,25 +17,28 @@ void Renderer::draw(funnel f, std::vector<Triangle> t){
         SDL_RenderDrawLine(renderer, (*i).c.x * 300, (*i).c.y * 300, (*i).a.x * 300, (*i).a.y * 300);
     }
 
-    Point_2 p1 = f.getApex();
+
     tpie::stack<Point_2> s = f.getStack();
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+
+    Point_2 p1 = s.pop();
     Point_2 p2;
     while (!s.empty()){
+
         p2 = s.pop();
         SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
         p1 = p2;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    /*SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
     tpie::deque<Point_2> d = f.getCusp();
     p1 = d.popFront();
     while (!d.empty()){
         p2 = d.popFront();
         SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
         p1 = p2;
-    }
+    }*/
 
 
 

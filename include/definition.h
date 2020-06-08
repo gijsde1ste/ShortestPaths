@@ -17,6 +17,11 @@ struct Point_2 {
     bool operator==(const Point_2 & other) const {
         return (fabs(x - other.x) <= epsilon && fabs(y - other.y) <= epsilon);
 	}
+
+	// returns distance^2, good enough to compare distance without using sqrt
+	inline double distance(const Point_2 & other) const {
+        return pow(other.x-x, 2) + pow(other.y-y, 2);
+	}
 };
 
 struct Edge{
