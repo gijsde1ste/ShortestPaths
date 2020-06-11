@@ -19,9 +19,6 @@ class Renderer
         void drawEnd();
 
         void draw(funnel f, std::vector<Triangle> t);
-        void drawFunnel(funnel f);
-        void drawTriangulation(std::vector<Triangle> t);
-
 
     protected:
 

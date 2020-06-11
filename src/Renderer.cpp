@@ -48,17 +48,6 @@ void Renderer::draw(funnel f, std::vector<Triangle> t){
     drawEnd();
 }
 
-
-void Renderer::drawFunnel(funnel f){
-
-
-}
-
-void Renderer::drawTriangulation(std::vector<Triangle> t){
-
-}
-
-
 void Renderer::drawStart(){
     clear();
 

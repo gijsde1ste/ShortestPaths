@@ -44,10 +44,6 @@ Point_2 Triangulation::getRandomPoint()
     return result;
 }
 
-bool Triangulation::containsPoint(Point_2 points[3], Point_2 p){
-    return (p == points[0] || p == points[1] || p == points[2]);
-}
-
 void Triangulation::createPath(Point_2 target){
     path.clear();
     pathProgress = 0;
@@ -57,8 +53,7 @@ void Triangulation::createPath(Point_2 target){
     // find a triangle containing target by scanning triangulation
     while (in.can_read()){
         n = in.read();
-        Point_2 *p = std::find(std::begin(n.points), std::end(n.points), target);
-        if (p != std::end(n.points)) {
+        if (containsPoint(n.points, target)) {
             // a target triangle has been found
             break;
         }
@@ -70,8 +65,7 @@ void Triangulation::createPath(Point_2 target){
     while (n.parent != -1){
         n = getNode(n.parent);
         // Check if parent contains target point, if so this is a shorter path to the root
-        Point_2 *p = std::find(std::begin(n.points), std::end(n.points), target);
-        if (p != std::end(n.points)) {
+        if (containsPoint(n.points, target)) {
             path.clear();
         }
         path.push_back(n.postOrder);
@@ -98,13 +92,12 @@ Edge Triangulation::commonEdge(Node a, Node b){
     bool foundFirst = false;
 
     for (int i = 0; i < 3; i++){
-        Point_2 *p = std::find(std::begin(b.points), std::end(b.points), a.points[i]);
-        if (p != std::end(b.points)) {
+        if (containsPoint(b.points, a.points[i])) {
             if (!foundFirst){
-                e.a = *p;
+                e.a = a.points[i];
                 foundFirst = true;
             } else {
-                e.b = *p;
+                e.b = a.points[i];
             }
         }
     }
@@ -112,6 +105,10 @@ Edge Triangulation::commonEdge(Node a, Node b){
     //std::cout << e.a.x << " " << e.a.y << " " << e.b.x << " " << e.b.y << std::endl;
 
     return e;
+}
+
+bool Triangulation::containsPoint(Point_2 points[3], Point_2 p){
+    return (p == points[0] || p == points[1] || p == points[2]);
 }
 
 std::vector<Triangle> Triangulation::copyPolygon(){

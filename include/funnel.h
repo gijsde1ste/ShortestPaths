@@ -14,6 +14,7 @@ class funnel
             geodesic = tpie::stack<Point_2>();
             cusp = tpie::deque<Point_2>();
 
+            // source = apex should be the point of source triangle that is not on the first added edge
             for (int i = 0; i < 3; i++){
                 apex = source.points[i];
                 if (!(apex == e.a) && !(apex == e.b)) break;
