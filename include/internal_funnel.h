@@ -1,18 +1,19 @@
-#ifndef FUNNEL_H
-#define FUNNEL_H
+#ifndef INTERNAL_FUNNEL_H
+#define INTERNAL_FUNNEL_H
 
 #include <definition.h>
-#include <tpie/stack.h>
-#include <deque.h>
+#include <tpie/internal_stack.h>
+#include <internal_deque.h>
 #include <Triangulation.h>
 
 
-class funnel
+class internal_funnel
 {
     public:
-        funnel(double blockFactor = 1.0) {
-            geodesic = tpie::stack<Point_2>(blockFactor);
-            cusp = tpie::deque<Point_2>(blockFactor);
+        internal_funnel(size_t n)
+        {
+            geodesic = tpie::internal_stack<Point_2>(n);
+            cusp = tpie::internal_deque<Point_2>(2*n);
         }
 
         inline void extendStart(Node source, Edge e){
@@ -33,9 +34,9 @@ class funnel
             }
         }
 
-        inline void reset(){
-            geodesic = tpie::stack<Point_2>();
-            cusp = tpie::deque<Point_2>();
+        inline void reset(size_t n){
+            geodesic = tpie::internal_stack<Point_2>(n);
+            cusp = tpie::internal_deque<Point_2>(2*n);
         }
 
         inline void extend(Edge e){
@@ -170,7 +171,7 @@ class funnel
             return geodesic.size();
         }
 
-        inline tpie::stack<Point_2> * getStack(){
+        inline tpie::internal_stack<Point_2> * getStack(){
             return &geodesic;
         }
 
@@ -178,7 +179,7 @@ class funnel
             return apex;
         }
 
-        inline tpie::deque<Point_2> getCusp(){
+        inline tpie::internal_deque<Point_2> getCusp(){
             return cusp;
         }
 
@@ -186,8 +187,8 @@ class funnel
 
     private:
         Point_2 apex;
-        tpie::stack<Point_2> geodesic;
-        tpie::deque<Point_2> cusp;
+        tpie::internal_stack<Point_2> geodesic;
+        tpie::internal_deque<Point_2> cusp;
 };
 
-#endif // FUNNEL_H
+#endif // INTERNAL_FUNNEL_H

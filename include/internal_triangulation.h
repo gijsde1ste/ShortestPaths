@@ -1,24 +1,15 @@
-#ifndef TRIANGULATION_H
-#define TRIANGULATION_H
+#ifndef INTERNAL_TRIANGULATION_H
+#define INTERNAL_TRIANGULATION_H
 
 #include <definition.h>
+#include <Triangulation.h>
 #include <time.h>
 
-struct Node
-{
-    Point_2 points[3];
-    int id, parent;
-    int leftChild, rightChild;
-    int postOrder, preOrder;
-};
-
-class Triangulation
+class internal_triangulation
 {
     public:
-        Triangulation(double blockFactor = 1.0);
+        internal_triangulation();
         void open(std::string file);
-        void close();
-        Node getNode(int index);
         Node getRoot();
         Edge getNextEdge();
         Edge commonEdge(Node a, Node b);
@@ -27,13 +18,15 @@ class Triangulation
         bool containsPoint(Point_2 points[3], Point_2 p);
         bool finished();
         std::vector<Triangle> copyPolygon();
+        size_t size();
 
     protected:
 
     private:
         tpie::uncompressed_stream<Node> in;
+        std::vector<Node> triangulation;
         std::vector<int> path;
         int pathProgress;
 };
 
-#endif // TRIANGULATION_H
+#endif // INTERNAL_TRIANGULATION_H

@@ -1,42 +1,32 @@
-#include "Triangulation.h"
+#include "internal_triangulation.h"
 
-Triangulation::Triangulation(double blockFactor)
-    : in(blockFactor)
+internal_triangulation::internal_triangulation()
 {
+    path = std::vector<int>();
     pathProgress = 0;
     srand(time(NULL));
 }
 
-void Triangulation::open(std::string file)
+void  internal_triangulation::open(std::string file)
 {
     in.open(file);
-}
 
-void Triangulation::close()
-{
+    while (in.can_read()){
+        triangulation.push_back(in.read());
+    }
+
     in.close();
 }
 
-Node Triangulation::getRoot()
+Point_2 internal_triangulation::getRandomPoint()
 {
-    in.seek(-1, in.end);
-    return in.read();
-}
-
-Node Triangulation::getNode(int index)
-{
-    in.seek(index);
-    return in.read();
-}
-
-Point_2 Triangulation::getRandomPoint()
-{
+    // root of tree
     Node source = getRoot();
     Point_2 result;
     while (true){
-        int triangleIndex = rand() % in.size();
+        int triangleIndex = rand() % triangulation.size();
         int vertexIndex = rand() % 3;
-        result = getNode(triangleIndex).points[vertexIndex];
+        result = triangulation[triangleIndex].points[vertexIndex];
 
         // if the random point we found is not part of source triangle
         if (!containsPoint(source.points, result)) break;
@@ -45,17 +35,21 @@ Point_2 Triangulation::getRandomPoint()
     return result;
 }
 
-void Triangulation::createPath(Point_2 target){
+Node internal_triangulation::getRoot(){
+    return triangulation[triangulation.size() - 1];
+}
+
+void internal_triangulation::createPath(Point_2 target){
     path.clear();
     pathProgress = 0;
 
-    in.seek(0);
-    Node n;
     // find a triangle containing target by scanning triangulation
-    while (in.can_read()){
-        n = in.read();
-        if (containsPoint(n.points, target)) {
+    Node n;
+    for (auto i = triangulation.begin(); i != triangulation.end(); i++)
+    {
+        if (containsPoint((*i).points, target)) {
             // a target triangle has been found
+            n = *i;
             break;
         }
     }
@@ -64,7 +58,7 @@ void Triangulation::createPath(Point_2 target){
     // its possible we find a triangle closer to the root that also contains the target point
     path.push_back(n.postOrder);
     while (n.parent != -1){
-        n = getNode(n.parent);
+        n = triangulation[n.parent];
         // Check if parent contains target point, if so this is a shorter path to the root
         if (containsPoint(n.points, target)) {
             path.clear();
@@ -76,19 +70,19 @@ void Triangulation::createPath(Point_2 target){
     std::reverse(path.begin(), path.end());
 }
 
-bool Triangulation::finished(){
+bool internal_triangulation::finished(){
     return path.size() - 1 == pathProgress;
 }
 
-Edge Triangulation::getNextEdge(){
-    Node cur = getNode(path[pathProgress]);
-    Node next = getNode(path[pathProgress + 1]);
+Edge internal_triangulation::getNextEdge(){
+    Node cur = triangulation[path[pathProgress]];
+    Node next = triangulation[path[pathProgress + 1]];
 
     pathProgress++;
     return commonEdge(cur, next);
 }
 
-Edge Triangulation::commonEdge(Node a, Node b){
+Edge internal_triangulation::commonEdge(Node a, Node b){
     Edge e;
     bool foundFirst = false;
 
@@ -108,19 +102,21 @@ Edge Triangulation::commonEdge(Node a, Node b){
     return e;
 }
 
-bool Triangulation::containsPoint(Point_2 points[3], Point_2 p){
+bool internal_triangulation::containsPoint(Point_2 points[3], Point_2 p){
     return (p == points[0] || p == points[1] || p == points[2]);
 }
 
-std::vector<Triangle> Triangulation::copyPolygon(){
+std::vector<Triangle> internal_triangulation::copyPolygon(){
     std::vector<Triangle> result;
-    in.seek(0);
-    Node n;
-    while (in.can_read()){
-        Node n = in.read();
+    for (auto i = triangulation.begin(); i != triangulation.end(); i++)
+    {
         //std::cout << n.postOrder << std::endl;
-        result.push_back(Triangle{n.points[0], n.points[1], n.points[2]});
+        result.push_back(Triangle{(*i).points[0], (*i).points[1], (*i).points[2]});
     }
 
     return result;
+}
+
+size_t internal_triangulation::size(){
+    return triangulation.size();
 }

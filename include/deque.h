@@ -31,6 +31,11 @@ public:
 
     }
 
+    ~deque(){
+        //frontStream.close();
+        //backStream.close();
+    }
+
     inline void pushFront(const T & t)
     {
         if (frontBuffer.size() == frontBufferItems) frontEmptyBuffer();
@@ -155,7 +160,6 @@ private:
 	}
 
 	inline void split(bool front) {
-        std::cout << "beginSplit" << std::endl;
         file_stream<T> tmpStream;
         tmpStream.open(static_cast<memory_size_type>(0), access_normal,
                       compression_normal);
@@ -197,8 +201,6 @@ private:
                 backStream.write(tmpStream.read_back());
             }
         }
-
-        std::cout << "Endsplit" << std::endl;
 	}
 };
 }

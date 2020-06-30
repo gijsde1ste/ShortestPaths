@@ -18,15 +18,15 @@ void Renderer::draw(funnel f, std::vector<Triangle> t){
     }
 
 
-    tpie::stack<Point_2> s = f.getStack();
+    tpie::stack<Point_2> *s = f.getStack();
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 
-    Point_2 p1 = s.pop();
+    Point_2 p1 = s->pop();
     Point_2 p2;
-    while (!s.empty()){
+    while (!s->empty()){
 
-        p2 = s.pop();
+        p2 = s->pop();
         SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
         p1 = p2;
     }
