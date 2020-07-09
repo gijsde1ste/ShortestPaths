@@ -7,8 +7,10 @@ SimpleShortestPathExperiment::SimpleShortestPathExperiment()
 
 void SimpleShortestPathExperiment::run(int argc, char** argv){
     // handle some arguments
-    std::string file = "test.tpie";
-    if (argc > 2) file = argv[2];
+    experimentName = "test";
+    if (argc > 2) experimentName = argv[2];
+
+    std::string file = experimentName + ".tpie";
 
     // mode 0 is I/O, 1 is internal, 2 is run to generate random source/target points and write them to file
     // next runs will use these points so we can time them properly
@@ -22,10 +24,14 @@ void SimpleShortestPathExperiment::run(int argc, char** argv){
 
 	switch (mode){
         case 0:
+            experimentName += "IO";
             testIOFunnel(file, targets);
+            writeResults();
             break;
         case 1:
+            experimentName += "Internal";
             testInternalFunnel(file, targets);
+            writeResults();
             break;
         case 2:
             generateTargets(file);
@@ -67,6 +73,8 @@ void SimpleShortestPathExperiment::testIOFunnel(std::string file, std::vector<Po
         t.createPath(*i);
         auto stopPath = std::chrono::high_resolution_clock::now();
 
+        timings.push_back(Timing(startPath, stopPath, "Path"));
+
         auto startFunnel = std::chrono::high_resolution_clock::now();
         f.extendStart(t.getRoot(), t.getNextEdge());
         while (!t.finished()){
@@ -75,13 +83,7 @@ void SimpleShortestPathExperiment::testIOFunnel(std::string file, std::vector<Po
         f.extendFinalStep(*i);
         auto stopFunnel = std::chrono::high_resolution_clock::now();
 
-        std::cout << "Path is " << f.getStackSize() << " points long" << std::endl;
-
-        duration = std::chrono::duration_cast<std::chrono::microseconds>(stopPath-startPath);
-        std::cout << "Path time: " << duration.count() << std::endl;
-
-        duration = std::chrono::duration_cast<std::chrono::microseconds>(stopFunnel-startFunnel);
-        std::cout << "Funnel time: " << duration.count() << std::endl;
+        timings.push_back(Timing(startFunnel, stopFunnel, "Funnel"));
 
         f.reset();
     }
@@ -93,9 +95,7 @@ void SimpleShortestPathExperiment::testIOFunnel(std::string file, std::vector<Po
 
     auto stopTotal = std::chrono::high_resolution_clock::now();
 
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(stopTotal-startTotal);
-    std::cout << "Total time: " << duration.count() << std::endl;
-
+    timings.push_back(Timing(startTotal, stopTotal, "Total"));
 
     //Renderer renderer;
     //renderer.draw(f, triangles);
@@ -117,6 +117,8 @@ void SimpleShortestPathExperiment::testInternalFunnel(std::string file, std::vec
         t.createPath(*i);
         auto stopPath = std::chrono::high_resolution_clock::now();
 
+        timings.push_back(Timing(startPath, stopPath, "Path"));
+
         auto startFunnel = std::chrono::high_resolution_clock::now();
         f.extendStart(t.getRoot(), t.getNextEdge());
         while (!t.finished()){
@@ -125,21 +127,14 @@ void SimpleShortestPathExperiment::testInternalFunnel(std::string file, std::vec
         f.extendFinalStep(*i);
         auto stopFunnel = std::chrono::high_resolution_clock::now();
 
-        std::cout << "Path is " << f.getStackSize() << " points long" << std::endl;
-
-        duration = std::chrono::duration_cast<std::chrono::microseconds>(stopPath-startPath);
-        std::cout << "Path time: " << duration.count() << std::endl;
-
-        duration = std::chrono::duration_cast<std::chrono::microseconds>(stopFunnel-startFunnel);
-        std::cout << "Funnel time: " << duration.count() << std::endl;
+        timings.push_back(Timing(startFunnel, stopFunnel, "Funnel"));
 
         f.reset(t.size());
     }
 
     auto stopTotal = std::chrono::high_resolution_clock::now();
 
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(stopTotal-startTotal);
-    std::cout << "Total time: " << duration.count() << std::endl;
+    timings.push_back(Timing(startTotal, stopTotal, "Total"));
 
     //std::vector<Triangle> triangles = t.copyPolygon();
 
@@ -158,4 +153,18 @@ std::vector<Point_2> SimpleShortestPathExperiment::getTargets(){
 	in.close();
 
 	return targets;
+}
+
+void SimpleShortestPathExperiment::writeResults(){
+
+    std::ofstream file;
+    file.open("../results/"+experimentName + ".csv", std::ios::trunc);
+
+    std::string line;
+    for (auto i = timings.begin(); i != timings.end(); ++i){
+        line = (*i).title + "," + std::to_string((*i).duration.count()) + "\n";
+        file << line;
+    }
+
+    file.close();
 }

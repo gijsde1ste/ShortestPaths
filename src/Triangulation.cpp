@@ -88,7 +88,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
 
     in.seek(0);
     Node n;
-    Node targetTriangles[targets.size()];
+    Node lastNodes[targets.size()];
 
     // find triangles containing targets by scanning triangulation
     while (in.can_read()){
@@ -100,18 +100,11 @@ void Triangulation::createPath(std::vector<Point_2> targets){
         // If the postOrder number is bigger for the same target it is closer to the source point
         // Since input is sorted in postOrder always override previous value
         for (auto it = foundTargets.begin(); it != foundTargets.end(); ++it){
-            targetTriangles[*it] = n;
+            lastNodes[*it] = {{n.points[0], n.points[1], n.points[2]}, -1, -1, -1, -1, n.postOrder, -1};
         }
     }
 
-    pathNode lastPathNodes[targets.size()];
-    // Put the initial nodes in the output path
-    for (int i = 0; i < targets.size(); ++i){
-        pathNode node = {targetTriangles[i].postOrder, -1, -1, -1};
-        lastPathNodes[i] = node;
-    }
-
-    tpie::uncompressed_stream<pathNode> out;
+    tpie::uncompressed_stream<Node> out;
     out.open("leafToRoot.tpie", tpie::access_write);
 
     in.seek(0);
@@ -120,36 +113,45 @@ void Triangulation::createPath(std::vector<Point_2> targets){
     while (in.can_read()){
         n = in.read();
         for (int i = 0; i < targets.size(); ++i){
-            if (n.leftChild == lastPathNodes[i].postOrder || n.rightChild == lastPathNodes[i].postOrder){
+            if (n.leftChild == lastNodes[i].postOrder || n.rightChild == lastNodes[i].postOrder){
                 // Check whether node n is already used in shortest path tree
                 for (int j = 0; j < targets.size(); ++j){
-                    if (lastPathNodes[j].postOrder == n.postOrder){
-                        if (lastPathNodes[j].leftChild == -1){
+                    if (lastNodes[j].postOrder == n.postOrder){
+                        if (lastNodes[j].leftChild == -1){
                             // count because leftChild is the node that will be written to file now
-                            lastPathNodes[j].leftChild = count;
+                            lastNodes[j].leftChild = count;
                         } else {
-                            lastPathNodes[j].rightChild = count;
+                            lastNodes[j].rightChild = count;
                         }
 
-                        lastPathNodes[i].id = count;
-                        out.write(lastPathNodes[i]);
+                        lastNodes[i].id = count;
+                        out.write(lastNodes[i]);
                         count++;
                         skip = true;
                     }
                 }
 
                 if (!skip){
-                    lastPathNodes[i].id = count;
-                    out.write(lastPathNodes[i]);
+                    lastNodes[i].id = count;
+                    out.write(lastNodes[i]);
                     count++;
 
-                    pathNode node = {n.postOrder, -1, lastPathNodes[i].id, -1};
-                    lastPathNodes[i] = node;
+                    lastNodes[i] = {{n.points[0], n.points[1], n.points[2]}, -1, -1, lastNodes[i].id, -1, n.postOrder, -1};
                 }
                 skip = false;
             }
         }
     }
+
+    // Append source node, that isn't written yet
+    Node source = {{n.points[0], n.points[1], n.points[2]}, -1, -1, -1, -1, n.postOrder, -1};
+    for (int i = 0; i < targets.size(); ++i){
+        if (n.postOrder == lastNodes[i].postOrder){
+            source = lastNodes[i];
+        }
+    }
+    source.id = count;
+    out.write(source);
 }
 
 bool Triangulation::finished(){

@@ -12,14 +12,6 @@ struct Node
     int postOrder, preOrder;
 };
 
-// Used to save k leaf to root paths through the triangulation
-struct pathNode
-{
-    int postOrder;
-    int id;
-    int leftChild, rightChild;
-};
-
 class Triangulation
 {
     public:
