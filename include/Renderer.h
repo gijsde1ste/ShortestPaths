@@ -7,6 +7,7 @@
 #include <funnel.h>
 #include <SDL2/SDL.h>
 #include <Triangulation.h>
+#include <SparseShortestPathTree.h>
 
 class Renderer
 {
@@ -19,6 +20,7 @@ class Renderer
         void drawEnd();
 
         void draw(funnel f, std::vector<Triangle> t);
+        void draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets);
 
     protected:
 

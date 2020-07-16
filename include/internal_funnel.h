@@ -1,13 +1,13 @@
 #ifndef INTERNAL_FUNNEL_H
 #define INTERNAL_FUNNEL_H
 
-#include <definition.h>
+#include <base_funnel.h>
 #include <tpie/internal_stack.h>
 #include <internal_deque.h>
 #include <Triangulation.h>
 
 
-class internal_funnel
+class internal_funnel: public base_funnel
 {
     public:
         internal_funnel(size_t n)
@@ -159,13 +159,6 @@ class internal_funnel
             }
         }
 
-        inline bool leftTurn(const Point_2 & p1, const Point_2 & p2, const Point_2 & p3) {
-            return (p1.x-p3.x)*(p2.y-p3.y) - (p1.y-p3.y)*(p2.x-p3.x) < 0;
-        }
-
-        inline bool rightTurn(const Point_2 & p1, const Point_2 & p2, const Point_2 & p3) {
-            return leftTurn(p3, p2, p1);
-        }
 
         inline tpie::stream_size_type getStackSize(){
             return geodesic.size();
@@ -175,10 +168,6 @@ class internal_funnel
             return &geodesic;
         }
 
-        inline Point_2 getApex(){
-            return apex;
-        }
-
         inline tpie::internal_deque<Point_2> getCusp(){
             return cusp;
         }
@@ -186,7 +175,6 @@ class internal_funnel
     protected:
 
     private:
-        Point_2 apex;
         tpie::internal_stack<Point_2> geodesic;
         tpie::internal_deque<Point_2> cusp;
 };

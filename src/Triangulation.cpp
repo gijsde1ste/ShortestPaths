@@ -12,6 +12,13 @@ void Triangulation::open(std::string file)
     in.open(file);
 }
 
+std::vector<int> Triangulation::openUserData()
+{
+    std::vector<int> degree3Nodes;
+    in.read_user_data(degree3Nodes);
+    return degree3Nodes;
+}
+
 void Triangulation::close()
 {
     in.close();
@@ -126,6 +133,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
 
                         lastNodes[i].id = count;
                         out.write(lastNodes[i]);
+                        //std::cout << lastNodes[i].id << " " << lastNodes[i].leftChild << " " << lastNodes[i].rightChild << std::endl;
                         count++;
                         skip = true;
                     }
@@ -134,6 +142,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
                 if (!skip){
                     lastNodes[i].id = count;
                     out.write(lastNodes[i]);
+                    //std::cout << lastNodes[i].id << " " << lastNodes[i].leftChild << " " << lastNodes[i].rightChild << std::endl;
                     count++;
 
                     lastNodes[i] = {{n.points[0], n.points[1], n.points[2]}, -1, -1, lastNodes[i].id, -1, n.postOrder, -1};
@@ -154,16 +163,53 @@ void Triangulation::createPath(std::vector<Point_2> targets){
     out.write(source);
 }
 
-bool Triangulation::finished(){
-    return path.size() - 1 == pathProgress;
+bool Triangulation::finished(bool shortestPathTree){
+    if (shortestPathTree){
+        if (getNode(pathProgress).leftChild == -1 && degree3Nodes.size() == 0){
+            return true;
+        }
+        return false;
+    } else {
+        return path.size() - 1 == pathProgress;
+    }
 }
 
-Edge Triangulation::getNextEdge(){
-    Node cur = getNode(path[pathProgress][0]);
-    Node next = getNode(path[pathProgress + 1][0]);
+Edge Triangulation::getNextEdge(bool shortestPathTree, SparseShortestPathTree * sspt){
+    if (shortestPathTree){
+        Node cur = getNode(pathProgress);
+        std::cout << cur.id << " " << cur.leftChild << " " << cur.rightChild << std::endl;
+        Node next;
 
-    pathProgress++;
-    return commonEdge(cur, next);
+        // Degree 3 node found, save it for later
+        if (cur.rightChild != -1){
+            next = getNode(cur.rightChild);
+            degree3Nodes.push_back({cur.id, sspt->getCuspCount(), sspt->getStackCount()});
+            sspt->startNextDeque();
+            sspt->startNextStack();
+        } else if (cur.leftChild != -1){
+            next = getNode(cur.leftChild);
+        } else {
+            // This is when we've reached a target, funnel is done and should backtrack to a degree 3 node
+            // How do we know this target?
+            //sspt->extendFinalStep(Point_2 target);
+            TraversalInfo ti = degree3Nodes.back();
+            degree3Nodes.pop_back();
+            cur = getNode(ti.NodeId);
+            next = getNode(cur.leftChild);
+
+            sspt->startNextDeque();
+            sspt->startNextStack();
+        }
+
+        pathProgress = next.id;
+        return commonEdge(cur, next);
+    } else {
+        Node cur = getNode(path[pathProgress][0]);
+        Node next = getNode(path[pathProgress + 1][0]);
+
+        pathProgress++;
+        return commonEdge(cur, next);
+    }
 }
 
 Edge Triangulation::commonEdge(Node a, Node b){
@@ -180,8 +226,6 @@ Edge Triangulation::commonEdge(Node a, Node b){
             }
         }
     }
-
-    //std::cout << e.a.x << " " << e.a.y << " " << e.b.x << " " << e.b.y << std::endl;
 
     return e;
 }
@@ -215,4 +259,8 @@ std::vector<Triangle> Triangulation::copyPolygon(){
     }
 
     return result;
+}
+
+void Triangulation::setPathProgress(int progress){
+    pathProgress = progress;
 }

@@ -1,13 +1,13 @@
 #ifndef FUNNEL_H
 #define FUNNEL_H
 
-#include <definition.h>
+#include <base_funnel.h>
 #include <tpie/stack.h>
 #include <deque.h>
 #include <Triangulation.h>
 
 
-class funnel
+class funnel: public base_funnel
 {
     public:
         funnel(double blockFactor = 1.0) {
@@ -158,24 +158,12 @@ class funnel
             }
         }
 
-        inline bool leftTurn(const Point_2 & p1, const Point_2 & p2, const Point_2 & p3) {
-            return (p1.x-p3.x)*(p2.y-p3.y) - (p1.y-p3.y)*(p2.x-p3.x) < 0;
-        }
-
-        inline bool rightTurn(const Point_2 & p1, const Point_2 & p2, const Point_2 & p3) {
-            return leftTurn(p3, p2, p1);
-        }
-
         inline tpie::stream_size_type getStackSize(){
             return geodesic.size();
         }
 
         inline tpie::stack<Point_2> * getStack(){
             return &geodesic;
-        }
-
-        inline Point_2 getApex(){
-            return apex;
         }
 
         inline tpie::deque<Point_2> getCusp(){
@@ -185,7 +173,6 @@ class funnel
     protected:
 
     private:
-        Point_2 apex;
         tpie::stack<Point_2> geodesic;
         tpie::deque<Point_2> cusp;
 };

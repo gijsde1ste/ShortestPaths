@@ -1,5 +1,6 @@
 #include <definition.h>
 #include <SimpleShortestPathExperiment.h>
+#include <SparseShortestPathTree.h>
 #include <Renderer.h>
 
 #include <Triangulation.h>
@@ -37,7 +38,8 @@ void run(int argc, char** argv){
 
         while(in.can_read()){
             Node n = in.read();
-            std::cout << n.id << " " << n.postOrder << " " << n.leftChild << " " << n.rightChild << std::endl;
+            //if (n.rightChild != -1)
+                std::cout << n.id << " " << n.postOrder << " " << n.leftChild << " " << n.rightChild << std::endl;
         }
         in.close();
     } else {
@@ -45,9 +47,24 @@ void run(int argc, char** argv){
         std::vector<Point_2> targets = getTargets();
 
         Triangulation t;
-        t.open("128.tpie");
-
+        t.open("test.tpie");
         t.createPath(targets);
+        t.close();
+
+        t.open("leafToRoot.tpie");
+        Node n = t.getRoot();
+        t.setPathProgress(n.id);
+
+        SparseShortestPathTree sspt;
+        sspt.extendStart(n, t.getNextEdge(true));
+        while(!t.finished(true)){
+            sspt.extend(t.getNextEdge(true, &sspt));
+        }
+
+        Renderer r;
+        r.drawStart();
+        r.draw(&sspt, t.copyPolygon(), targets);
+        r.drawEnd();
     }
 }
 

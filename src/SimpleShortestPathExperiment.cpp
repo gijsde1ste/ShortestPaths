@@ -47,13 +47,14 @@ void SimpleShortestPathExperiment::generateTargets(std::string file){
     t.open(file);
 
     std::vector<Point_2> targets;
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 4; i++){
         targets.push_back(t.getRandomPoint());
     }
     t.close();
 
     tpie::uncompressed_stream<Point_2> out;
     out.open("targets.tpie");
+    out.truncate(0);
     out.write(targets.begin(), targets.end());
     out.close();
 }
