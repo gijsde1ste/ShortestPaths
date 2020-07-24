@@ -20,7 +20,7 @@ class Renderer
         void drawEnd();
 
         void draw(funnel f, std::vector<Triangle> t);
-        void draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets);
+        void draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets, std::vector<DegreeThreeNode> splitVertices);
 
     protected:
 

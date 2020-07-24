@@ -47,7 +47,7 @@ void SimpleShortestPathExperiment::generateTargets(std::string file){
     t.open(file);
 
     std::vector<Point_2> targets;
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < 20; i++){
         targets.push_back(t.getRandomPoint());
     }
     t.close();

@@ -30,10 +30,15 @@ Node Triangulation::getRoot()
     return in.read();
 }
 
-Node Triangulation::getNode(int index)
+Node Triangulation::getNode(int index, bool inOrOut)
 {
-    in.seek(index);
-    return in.read();
+    if (!inOrOut){
+        in.seek(index);
+        return in.read();
+    } else {
+        out.seek(index);
+        return out.read();
+    }
 }
 
 Point_2 Triangulation::getRandomPoint()
@@ -95,8 +100,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
 
     in.seek(0);
     Node n;
-    Node lastNodes[targets.size()];
-
+    std::vector<Node> lastNodes(targets.size());
     // find triangles containing targets by scanning triangulation
     while (in.can_read()){
 
@@ -111,56 +115,119 @@ void Triangulation::createPath(std::vector<Point_2> targets){
         }
     }
 
-    tpie::uncompressed_stream<Node> out;
-    out.open("leafToRoot.tpie", tpie::access_write);
+    std::sort(lastNodes.begin(), lastNodes.end(), [](Node a, Node b){
+        return a.postOrder < b.postOrder;
+    });
+
 
     in.seek(0);
     int count = 0;
-    bool skip = false;
+    bool foundChild = false;
+    Point_2 lastPoints[3];
+
+    out.open("leafToRoot.tpie", tpie::access_read_write, 2048);
+    out.truncate(0);
+    std::vector<DegreeThreeNode> metaData;
+
     while (in.can_read()){
         n = in.read();
+
+        Node nodeOut = {{0, 0, 0}, -1, -1, -1, -1, -1, -1};
+
         for (int i = 0; i < targets.size(); ++i){
-            if (n.leftChild == lastNodes[i].postOrder || n.rightChild == lastNodes[i].postOrder){
-                // Check whether node n is already used in shortest path tree
-                for (int j = 0; j < targets.size(); ++j){
-                    if (lastNodes[j].postOrder == n.postOrder){
-                        if (lastNodes[j].leftChild == -1){
-                            // count because leftChild is the node that will be written to file now
-                            lastNodes[j].leftChild = count;
-                        } else {
-                            lastNodes[j].rightChild = count;
+            if (n.postOrder == lastNodes[i].postOrder){
+                if (!foundChild){
+                    foundChild = true;
+                    // fill lastpoints so we can use them properly if we find a deg-3 node
+                    lastPoints[0] = lastNodes[i].points[0];
+                    lastPoints[1] = lastNodes[i].points[1];
+                    lastPoints[2] = lastNodes[i].points[2];
+
+                    nodeOut.id = count;
+                    std::copy(std::begin(n.points), std::end(n.points), std::begin(nodeOut.points));
+                    nodeOut.leftChild = lastNodes[i].leftChild;
+                    nodeOut.postOrder = n.postOrder;
+
+                    // create new node, only need leftChild and postOrder number to function
+                    // points are initialised to this (previous) node so we can easily
+                    // find split vertex if its parent is degree 3 node
+                    lastNodes[i] = {{n.points[0], n.points[1], n.points[2]}, -1, -1, nodeOut.id, -1, n.parent, -1};
+                } else if(lastNodes[i].leftChild != -1){
+
+                    // Degree 3 node found
+                    nodeOut.rightChild = lastNodes[i].leftChild;
+
+                    // Find split vertex
+                    Point_2 splitVertex;
+                    for (int x = 0; x < 3; x++){
+                        if (containsPoint(lastNodes[i].points, lastPoints[x])){
+                            splitVertex = lastPoints[x];
+                            break;
                         }
-
-                        lastNodes[i].id = count;
-                        out.write(lastNodes[i]);
-                        //std::cout << lastNodes[i].id << " " << lastNodes[i].leftChild << " " << lastNodes[i].rightChild << std::endl;
-                        count++;
-                        skip = true;
                     }
-                }
 
-                if (!skip){
-                    lastNodes[i].id = count;
-                    out.write(lastNodes[i]);
-                    //std::cout << lastNodes[i].id << " " << lastNodes[i].leftChild << " " << lastNodes[i].rightChild << std::endl;
-                    count++;
-
-                    lastNodes[i] = {{n.points[0], n.points[1], n.points[2]}, -1, -1, lastNodes[i].id, -1, n.postOrder, -1};
+                    metaData.push_back({metaData.size(), n.postOrder, splitVertex, -1, -1});
                 }
-                skip = false;
+            }
+        }
+
+        // Node is used, so write it
+        if (foundChild) {
+            foundChild = false;
+            out.write(nodeOut);
+            count++;
+        }
+    }
+
+    in.close();
+
+    // scan the previously generated file backwards to get the metaData tree in correct order
+    std::stack<std::pair<int, int>> history; // max k degree 3 nodes, easily fits in main memory
+    int index = metaData.size() - 1;
+    int current = -1;
+
+    out.seek(0, out.end);
+    n = out.read_back();
+
+    while (index >= 0){
+        if (n.rightChild != -1){
+
+            history.push({index, n.leftChild});
+
+            if (current != -1){
+                if (metaData[current].rightChild == -1){
+                    metaData[current].rightChild = index;
+                } else {
+                    metaData[current].leftChild = index;
+                }
+            }
+
+            current = index;
+            index--;
+            n = getNode(n.rightChild, true);
+            continue;
+        } else {
+            if (n.leftChild != -1){
+                n = getNode(n.leftChild, true);
+            } else {
+                std::pair<int, int> last = history.top();
+                history.pop();
+
+                current = last.first;
+                n = getNode(last.second, true);
             }
         }
     }
 
-    // Append source node, that isn't written yet
-    Node source = {{n.points[0], n.points[1], n.points[2]}, -1, -1, -1, -1, n.postOrder, -1};
-    for (int i = 0; i < targets.size(); ++i){
-        if (n.postOrder == lastNodes[i].postOrder){
-            source = lastNodes[i];
-        }
+    for (auto i = metaData.begin(); i != metaData.end(); ++i){
+        std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->vertex.x << " " << i->vertex.y << std::endl;
     }
-    source.id = count;
-    out.write(source);
+
+    SplitVertices = metaData;
+
+    out.seek(0, out.end);
+    out.write_user_data(metaData);
+    out.close();
 }
 
 bool Triangulation::finished(bool shortestPathTree){

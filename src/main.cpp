@@ -47,7 +47,7 @@ void run(int argc, char** argv){
         std::vector<Point_2> targets = getTargets();
 
         Triangulation t;
-        t.open("test.tpie");
+        t.open("3x3.tpie");
         t.createPath(targets);
         t.close();
 
@@ -56,14 +56,14 @@ void run(int argc, char** argv){
         t.setPathProgress(n.id);
 
         SparseShortestPathTree sspt;
-        sspt.extendStart(n, t.getNextEdge(true));
+        /*sspt.extendStart(n, t.getNextEdge(true));
         while(!t.finished(true)){
             sspt.extend(t.getNextEdge(true, &sspt));
-        }
+        }*/
 
         Renderer r;
         r.drawStart();
-        r.draw(&sspt, t.copyPolygon(), targets);
+        r.draw(&sspt, t.copyPolygon(), targets, t.SplitVertices);
         r.drawEnd();
     }
 }

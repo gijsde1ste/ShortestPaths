@@ -48,7 +48,7 @@ void Renderer::draw(funnel f, std::vector<Triangle> t){
     drawEnd();
 }
 
-void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets){
+void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets, std::vector<DegreeThreeNode> splitVertices){
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     for (auto i = t.begin(); i != t.end(); i++){
@@ -66,6 +66,12 @@ void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std:
     }
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    for (auto i = splitVertices.begin(); i != splitVertices.end(); i++){
+        rect = {i->vertex.x * 300 - 5, i->vertex.y * 300 - 5, 10, 10};
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+    /*SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     std::cout << "stacks: " << sspt->stacks.size() << " Deques: " << sspt->cusps.size() << std::endl;
     for (auto i = sspt->stacks.begin(); i != sspt->stacks.end(); i++){
         std::cout << (*i)->size() << std::endl;
@@ -82,7 +88,7 @@ void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std:
     std::cout << " ---- " << std::endl;
     for (auto i = sspt->cusps.begin(); i != sspt->cusps.end(); i++){
         std::cout << (*i)->size() << std::endl;
-    }
+    }*/
 }
 
 void Renderer::drawStart(){

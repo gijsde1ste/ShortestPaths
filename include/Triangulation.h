@@ -20,6 +20,13 @@ struct TraversalInfo
     int StackId;
 };
 
+struct DegreeThreeNode
+{
+    int id, nodeId;
+    Point_2 vertex;
+    int leftChild, rightChild;
+};
+
 class SparseShortestPathTree;
 
 #include <SparseShortestPathTree.h>
@@ -32,7 +39,7 @@ class Triangulation
         void open(std::string file);
         std::vector<int> openUserData();
         void close();
-        Node getNode(int index);
+        Node getNode(int index, bool inOrOut = false);
         Node getRoot();
         Edge getNextEdge(bool shortestPathTree = false, SparseShortestPathTree * sspt = nullptr);
         Edge commonEdge(Node a, Node b);
@@ -44,11 +51,13 @@ class Triangulation
         bool finished(bool shortestPathTree = false);
         std::vector<Triangle> copyPolygon();
         void setPathProgress(int progress);
+        std::vector<DegreeThreeNode> SplitVertices;
 
     protected:
 
     private:
         tpie::uncompressed_stream<Node> in;
+        tpie::uncompressed_stream<Node> out;
         std::vector<TraversalInfo> degree3Nodes;
         std::vector<std::vector<int>> path;
         int pathProgress;
