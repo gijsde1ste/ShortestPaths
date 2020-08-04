@@ -12,9 +12,8 @@ void Triangulation::open(std::string file)
     in.open(file);
 }
 
-std::vector<int> Triangulation::openUserData()
+std::vector<DegreeThreeNode> Triangulation::openUserData()
 {
-    std::vector<int> degree3Nodes;
     in.read_user_data(degree3Nodes);
     return degree3Nodes;
 }
@@ -166,7 +165,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
                         }
                     }
 
-                    metaData.push_back({metaData.size(), n.postOrder, splitVertex, -1, -1});
+                    metaData.push_back({metaData.size(), n.postOrder, splitVertex, -1, -1, -1});
                 }
             }
         }
@@ -197,8 +196,10 @@ void Triangulation::createPath(std::vector<Point_2> targets){
             if (current != -1){
                 if (metaData[current].rightChild == -1){
                     metaData[current].rightChild = index;
+                    metaData[index].parentNode = current;
                 } else {
                     metaData[current].leftChild = index;
+                    metaData[index].parentNode = current;
                 }
             }
 
@@ -220,7 +221,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
     }
 
     for (auto i = metaData.begin(); i != metaData.end(); ++i){
-        std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->vertex.x << " " << i->vertex.y << std::endl;
+        std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->parentNode << " "  << i->vertex.x << " " << i->vertex.y << std::endl;
     }
 
     SplitVertices = metaData;
@@ -232,7 +233,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
 
 bool Triangulation::finished(bool shortestPathTree){
     if (shortestPathTree){
-        if (getNode(pathProgress).leftChild == -1 && degree3Nodes.size() == 0){
+        if (getNode(pathProgress).leftChild == -1){
             return true;
         }
         return false;
@@ -250,22 +251,23 @@ Edge Triangulation::getNextEdge(bool shortestPathTree, SparseShortestPathTree * 
         // Degree 3 node found, save it for later
         if (cur.rightChild != -1){
             next = getNode(cur.rightChild);
-            degree3Nodes.push_back({cur.id, sspt->getCuspCount(), sspt->getStackCount()});
-            sspt->startNextDeque();
-            sspt->startNextStack();
+            sspt->currentDtn = &sspt->degree3Nodes[sspt->currentDtn->leftChild];
+            //degree3Nodes.push_back({cur.id, sspt->getCuspCount(), sspt->getStackCount()});
+            //sspt->startNextDeque();
+            //sspt->startNextStack();
         } else if (cur.leftChild != -1){
             next = getNode(cur.leftChild);
         } else {
             // This is when we've reached a target, funnel is done and should backtrack to a degree 3 node
             // How do we know this target?
             //sspt->extendFinalStep(Point_2 target);
-            TraversalInfo ti = degree3Nodes.back();
+            /*TraversalInfo ti = degree3Nodes.back();
             degree3Nodes.pop_back();
             cur = getNode(ti.NodeId);
             next = getNode(cur.leftChild);
 
             sspt->startNextDeque();
-            sspt->startNextStack();
+            sspt->startNextStack();*/
         }
 
         pathProgress = next.id;

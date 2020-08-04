@@ -24,7 +24,10 @@ struct DegreeThreeNode
 {
     int id, nodeId;
     Point_2 vertex;
-    int leftChild, rightChild;
+    int leftChild, rightChild, parentNode;
+    // Used to keep track how many left/right childs a node has, to determine which deques to use during funnel splits
+    int nLeftChilds, nRightChilds;
+    Point_2 parent;
 };
 
 class SparseShortestPathTree;
@@ -37,7 +40,7 @@ class Triangulation
     public:
         Triangulation(double blockFactor = 1.0);
         void open(std::string file);
-        std::vector<int> openUserData();
+        std::vector<DegreeThreeNode> openUserData();
         void close();
         Node getNode(int index, bool inOrOut = false);
         Node getRoot();
@@ -58,7 +61,7 @@ class Triangulation
     private:
         tpie::uncompressed_stream<Node> in;
         tpie::uncompressed_stream<Node> out;
-        std::vector<TraversalInfo> degree3Nodes;
+        std::vector<DegreeThreeNode> degree3Nodes;
         std::vector<std::vector<int>> path;
         int pathProgress;
 };

@@ -55,17 +55,20 @@ void run(int argc, char** argv){
         Node n = t.getRoot();
         t.setPathProgress(n.id);
 
-        SparseShortestPathTree sspt;
-        /*sspt.extendStart(n, t.getNextEdge(true));
+        SparseShortestPathTree sspt(t.openUserData());
+        sspt.extendStart(n, t.getNextEdge(true));
         while(!t.finished(true)){
             sspt.extend(t.getNextEdge(true, &sspt));
-        }*/
+        }
 
         Renderer r;
         r.drawStart();
         r.draw(&sspt, t.copyPolygon(), targets, t.SplitVertices);
         r.drawEnd();
+
+        t.close();
     }
+
 }
 
 int main(int argc, char** argv) {
