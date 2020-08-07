@@ -31,19 +31,17 @@ SparseShortestPathTree::SparseShortestPathTree(std::vector<DegreeThreeNode> degr
     // Assign number of left/right childs to degree3Nodes to known which deques should be used at split
     currentDtn = &degree3Nodes.back();
     assignNChilds(currentDtn);
+    assignDeques(currentDtn, 0, cusps.size() - 1);
     currentCusp = currentDtn->nLeftChilds;
     cusp = cusps[currentCusp];
 
     geodesic = new tpie::stack<Point_2>();
-    /*
-    cuspCount = 0;
-    cusps.push_back(new tpie::deque<Point_2>());
-    cusp = cusps[cuspCount];
 
-    stackCount = 0;
-    stacks.push_back(new tpie::stack<Point_2>());
-    geodesic = stacks[stackCount];
-    */
+    for (auto i = degree3Nodes.begin(); i != degree3Nodes.end(); ++i){
+        std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->parentNode << " "  << i->vertex.x << " " << i->vertex.y
+        << " --- " << i->nLeftChilds << " " << i->nRightChilds << " --- " << i->minDeque << " " << i->deque << " " << i->maxDeque << std::endl;
+    }
+
 }
 
 int SparseShortestPathTree::assignNChilds(DegreeThreeNode * dtn){
@@ -60,6 +58,20 @@ int SparseShortestPathTree::assignNChilds(DegreeThreeNode * dtn){
     }
 
     return dtn->nLeftChilds + dtn->nRightChilds + 1;
+}
+
+void SparseShortestPathTree::assignDeques(DegreeThreeNode * dtn, int min, int max){
+    dtn->minDeque = min;
+    dtn->maxDeque = max;
+    dtn->deque = min + dtn->nLeftChilds;
+
+    if (dtn->leftChild != -1){
+        assignDeques(&degree3Nodes[dtn->leftChild], min, dtn->deque - 1);
+    }
+
+    if (dtn->rightChild != -1){
+        assignDeques(&degree3Nodes[dtn->rightChild], dtn->deque + 1, max);
+    }
 }
 
 void SparseShortestPathTree::extendStart(Node source, Edge e){
@@ -97,7 +109,6 @@ void SparseShortestPathTree::extend(Edge e){
     Point_2 b = e.b;
 
     // one of the points should already be part of the cusp
-
     if (a == peekFront()){
         extend(b, false);
     } else if (a == peekBack()){
@@ -106,6 +117,9 @@ void SparseShortestPathTree::extend(Edge e){
         extend(a, false);
     } else if (b == peekBack()){
         extend(a, true);
+    } else {
+        std::cout << a.x << " " << a.y << " " << b.x << " " << b.y << std::endl;
+        std::cout << peekFront().x << " " << peekFront().y << " " << peekBack().x << " " << peekBack().y << std::endl;
     }
 }
 
@@ -130,13 +144,13 @@ void SparseShortestPathTree::assignFingerParents(DegreeThreeNode * dtn, Point_2 
     if (front){
         if (rightTurn(peekFront(), p, dtn->vertex)){
             dtn->parent = p;
-            if (!cuspChanged) currentCusp = getDeque(dtn);
+            if (!cuspChanged) currentCusp = dtn->deque;
             cuspChanged = true;
         }
     } else {
         if (leftTurn(peekBack(), p, dtn->vertex)){
             dtn->parent = p;
-            if (!cuspChanged) currentCusp = getDeque(dtn);
+            if (!cuspChanged) currentCusp = dtn->deque;
             cuspChanged = true;
         }
     }
@@ -155,31 +169,35 @@ void SparseShortestPathTree::extend(Point_2 p, bool front) {
     Point_2 a, b;
     bool passedApex = false;
 
-    cuspChanged = false;
-    // Handle the parents of fingers
-    if (front){
-        if (rightTurn(peekFront(), p, currentDtn->vertex)){
-            currentDtn->parent = p;
-            currentCusp = getDeque(currentDtn);
-            cuspChanged = true;
-        }
 
-        if (currentDtn->leftChild != -1){
-            assignFingerParents(&degree3Nodes[currentDtn->leftChild], p, front);
-        }
-    } else {
-        if (leftTurn(cusp->peekBack(), p, currentDtn->vertex)){
-            currentDtn->parent = p;
-            currentCusp = getDeque(currentDtn);
-            cuspChanged = true;
-        }
+    // Only needs to be done when there's a currentDtn (we're not doing the last leaf bit below lowest dtns)
+    if (currentDtn->id != -1){
+        cuspChanged = false;
+        // Handle the parents of fingers
+        if (front){
+            if (rightTurn(peekFront(), p, currentDtn->vertex)){
+                currentDtn->parent = p;
+                currentCusp = currentDtn->deque;
+                cuspChanged = true;
+            }
 
-        if (currentDtn->rightChild != -1){
-            assignFingerParents(&degree3Nodes[currentDtn->rightChild], p, front);
+            if (currentDtn->leftChild != -1){
+                assignFingerParents(&degree3Nodes[currentDtn->leftChild], p, front);
+            }
+        } else {
+            if (leftTurn(cusp->peekBack(), p, currentDtn->vertex)){
+                currentDtn->parent = p;
+                currentCusp = currentDtn->deque;
+                cuspChanged = true;
+            }
+
+            if (currentDtn->rightChild != -1){
+                assignFingerParents(&degree3Nodes[currentDtn->rightChild], p, front);
+            }
         }
+        // Set cusp to add vertices the correct cusp with regards to changing fingers
+        cusp = cusps[currentCusp];
     }
-    // Set cusp to add vertices the correct cusp with regards to changing fingers
-    cusp = cusps[currentCusp];
 
 
     if (front){
@@ -333,4 +351,11 @@ int SparseShortestPathTree::getCuspCount()
 int SparseShortestPathTree::getStackCount()
 {
     return stackCount;
+}
+
+void SparseShortestPathTree::setCurrentDtn(DegreeThreeNode * dtn){
+    currentDtn = dtn;
+
+    minCusp = dtn->minDeque;
+    maxCusp = dtn->maxDeque;
 }

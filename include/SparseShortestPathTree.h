@@ -10,7 +10,9 @@ class SparseShortestPathTree: public base_funnel
     public:
         SparseShortestPathTree(std::vector<DegreeThreeNode> degreeThreeNodes);
         int assignNChilds(DegreeThreeNode * dtn);
+        void assignDeques(DegreeThreeNode * dtn, int min, int max);
         void assignFingerParents(DegreeThreeNode * dtn, Point_2 p, bool front);
+        void setCurrentDtn(DegreeThreeNode * dtn);
         void extendStart(Node source, Edge e);
         void extend(Edge e);
         void extend(Point_2 p, bool front);
@@ -36,12 +38,13 @@ class SparseShortestPathTree: public base_funnel
         int stackCount;
 
         std::vector<DegreeThreeNode> degree3Nodes;
+        Point_2 point2Zero;
 
     protected:
 
     private:
 
-        Point_2 point2Zero;
+
 
 
 };

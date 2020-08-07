@@ -28,6 +28,7 @@ struct DegreeThreeNode
     // Used to keep track how many left/right childs a node has, to determine which deques to use during funnel splits
     int nLeftChilds, nRightChilds;
     Point_2 parent;
+    int minDeque, maxDeque, deque;
 };
 
 class SparseShortestPathTree;
@@ -62,6 +63,7 @@ class Triangulation
         tpie::uncompressed_stream<Node> in;
         tpie::uncompressed_stream<Node> out;
         std::vector<DegreeThreeNode> degree3Nodes;
+        std::vector<std::tuple<int, Point_2, DegreeThreeNode*>> treeStack;
         std::vector<std::vector<int>> path;
         int pathProgress;
 };

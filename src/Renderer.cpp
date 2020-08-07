@@ -73,13 +73,15 @@ void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std:
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 
-    Point_2 p1 = sspt->geodesic->pop();
-    Point_2 p2;
+    if (sspt->geodesic->size() > 0){
+        Point_2 p1 = sspt->geodesic->pop();
+        Point_2 p2;
 
-    while(!sspt->geodesic->empty()){
-        p2 = sspt->geodesic->pop();
-        SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
-        p1 = p2;
+        while(!sspt->geodesic->empty()){
+            p2 = sspt->geodesic->pop();
+            SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
+            p1 = p2;
+        }
     }
 
     /*SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);

@@ -19,6 +19,10 @@ class base_funnel
             return apex;
         }
 
+        inline void setApex(Point_2 a){
+            apex = a;
+        }
+
     protected:
         Point_2 apex;
 

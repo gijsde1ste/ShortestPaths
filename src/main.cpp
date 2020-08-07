@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <definition.h>
 #include <SimpleShortestPathExperiment.h>
 #include <SparseShortestPathTree.h>
@@ -32,7 +33,6 @@ void run(int argc, char** argv){
             std::cout << (*i).x << " " << (*i).y << std::endl;
         }
 
-
         tpie::uncompressed_stream<Node> in;
         in.open("leafToRoot.tpie");
 
@@ -46,6 +46,8 @@ void run(int argc, char** argv){
         // Temporary development default thingy
         std::vector<Point_2> targets = getTargets();
 
+        // Remove temp files from possibly crashed last run
+        remove("leafToRoot.tpie");
         Triangulation t;
         t.open("3x3.tpie");
         t.createPath(targets);
@@ -65,6 +67,8 @@ void run(int argc, char** argv){
         r.drawStart();
         r.draw(&sspt, t.copyPolygon(), targets, t.SplitVertices);
         r.drawEnd();
+
+        std::cout << sspt.geodesic->size() << std::endl;
 
         t.close();
     }

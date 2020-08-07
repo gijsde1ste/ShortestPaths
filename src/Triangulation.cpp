@@ -131,7 +131,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
     while (in.can_read()){
         n = in.read();
 
-        Node nodeOut = {{0, 0, 0}, -1, -1, -1, -1, -1, -1};
+        Node nodeOut = {{{0, 0}, {0, 0}, {0,0}}, -1, -1, -1, -1, -1, -1};
 
         for (int i = 0; i < targets.size(); ++i){
             if (n.postOrder == lastNodes[i].postOrder){
@@ -165,7 +165,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
                         }
                     }
 
-                    metaData.push_back({metaData.size(), n.postOrder, splitVertex, -1, -1, -1});
+                    metaData.push_back({metaData.size(), n.postOrder, splitVertex, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1});
                 }
             }
         }
@@ -220,10 +220,6 @@ void Triangulation::createPath(std::vector<Point_2> targets){
         }
     }
 
-    for (auto i = metaData.begin(); i != metaData.end(); ++i){
-        std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->parentNode << " "  << i->vertex.x << " " << i->vertex.y << std::endl;
-    }
-
     SplitVertices = metaData;
 
     out.seek(0, out.end);
@@ -233,7 +229,7 @@ void Triangulation::createPath(std::vector<Point_2> targets){
 
 bool Triangulation::finished(bool shortestPathTree){
     if (shortestPathTree){
-        if (getNode(pathProgress).leftChild == -1){
+        if (getNode(pathProgress).leftChild == -1 && treeStack.size() == 0){
             return true;
         }
         return false;
@@ -251,23 +247,32 @@ Edge Triangulation::getNextEdge(bool shortestPathTree, SparseShortestPathTree * 
         // Degree 3 node found, save it for later
         if (cur.rightChild != -1){
             next = getNode(cur.rightChild);
-            sspt->currentDtn = &sspt->degree3Nodes[sspt->currentDtn->leftChild];
-            //degree3Nodes.push_back({cur.id, sspt->getCuspCount(), sspt->getStackCount()});
-            //sspt->startNextDeque();
-            //sspt->startNextStack();
+
+            if (sspt->currentDtn->rightChild != -1){
+                sspt->setCurrentDtn(&sspt->degree3Nodes[sspt->currentDtn->rightChild]);
+            } else {
+                // Hack a special kind of degreeThreeNode together, only used for the min/max/current deque which is all the same value for this leaf.
+                DegreeThreeNode temp = {-1, -1, sspt->point2Zero, -1, -1, -1, 0, 0, sspt->point2Zero, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1};
+                sspt->setCurrentDtn(&temp);
+            }
+
+            if (sspt->currentDtn->leftChild != -1){
+                treeStack.push_back(std::tuple<int, Point_2, DegreeThreeNode*>{cur.id, sspt->getApex(), &sspt->degree3Nodes[sspt->currentDtn->leftChild]});
+            } else {
+                DegreeThreeNode temp = {-1, -1, sspt->point2Zero, -1, -1, -1, 0, 0, sspt->point2Zero, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1};
+                treeStack.push_back(std::tuple<int, Point_2, DegreeThreeNode*>{cur.id, sspt->getApex(), &temp});
+            }
+
         } else if (cur.leftChild != -1){
             next = getNode(cur.leftChild);
         } else {
-            // This is when we've reached a target, funnel is done and should backtrack to a degree 3 node
-            // How do we know this target?
-            //sspt->extendFinalStep(Point_2 target);
-            /*TraversalInfo ti = degree3Nodes.back();
-            degree3Nodes.pop_back();
-            cur = getNode(ti.NodeId);
-            next = getNode(cur.leftChild);
+            std::tuple<int, Point_2, DegreeThreeNode*> node = treeStack.back();
+            treeStack.pop_back();
 
-            sspt->startNextDeque();
-            sspt->startNextStack();*/
+            cur = getNode(std::get<0>(node));
+            next = getNode(cur.leftChild);
+            sspt->setApex(std::get<1>(node));
+            sspt->setCurrentDtn(std::get<2>(node));
         }
 
         pathProgress = next.id;
