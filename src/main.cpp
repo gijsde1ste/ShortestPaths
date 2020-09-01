@@ -2,9 +2,12 @@
 #include <definition.h>
 #include <SimpleShortestPathExperiment.h>
 #include <SparseShortestPathTree.h>
+#include <SptInternal.h>
 #include <Renderer.h>
 
 #include <Triangulation.h>
+#include <SsptTriangulation.h>
+#include <SptInternalTriangulation.h>
 
 
 std::vector<Point_2> getTargets(){
@@ -42,13 +45,33 @@ void run(int argc, char** argv){
                 std::cout << n.id << " " << n.postOrder << " " << n.leftChild << " " << n.rightChild << std::endl;
         }
         in.close();
+    } else if (type == "internal"){
+        SptInternalTriangulation t;
+        t.open("test.tpie");
+        Node n = t.getRoot();
+        t.setPathProgress(n.postOrder);
+
+        SptInternal spt(t.size());
+        spt.extendStart(n, t.getNextEdge());
+        while(!t.finished()){
+            spt.extend(t.getNextEdge());
+        }
+        spt.print();
+        spt.generateRandomTargets(10);
+
+        Renderer r;
+        r.drawStart();
+        r.draw(t.copyPolygon(), &spt);
+        r.drawEnd();
+
     } else {
+
         // Temporary development default thingy
         std::vector<Point_2> targets = getTargets();
 
         // Remove temp files from possibly crashed last run
         remove("leafToRoot.tpie");
-        Triangulation t;
+        SsptTriangulation t;
         t.open("3x3.tpie");
         t.createPath(targets);
         t.close();
@@ -58,17 +81,18 @@ void run(int argc, char** argv){
         t.setPathProgress(n.id);
 
         SparseShortestPathTree sspt(t.openUserData());
-        sspt.extendStart(n, t.getNextEdge(true));
-        while(!t.finished(true)){
-            sspt.extend(t.getNextEdge(true, &sspt));
+        sspt.extendStart(n, t.getNextEdge(&sspt));
+        while(!t.finished()){
+            sspt.extend(t.getNextEdge(&sspt));
         }
+        sspt.out.close();
 
         Renderer r;
         r.drawStart();
         r.draw(&sspt, t.copyPolygon(), targets, t.SplitVertices);
         r.drawEnd();
 
-        std::cout << sspt.geodesic->size() << std::endl;
+        //std::cout << sspt.geodesic->size() << std::endl;
 
         t.close();
     }

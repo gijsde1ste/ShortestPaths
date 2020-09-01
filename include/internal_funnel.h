@@ -173,10 +173,10 @@ class internal_funnel: public base_funnel
         }
 
     protected:
-
-    private:
         tpie::internal_stack<Point_2> geodesic;
         tpie::internal_deque<Point_2> cusp;
+    private:
+
 };
 
 #endif // INTERNAL_FUNNEL_H

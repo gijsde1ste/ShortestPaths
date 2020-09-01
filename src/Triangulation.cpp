@@ -227,63 +227,17 @@ void Triangulation::createPath(std::vector<Point_2> targets){
     out.close();
 }
 
-bool Triangulation::finished(bool shortestPathTree){
-    if (shortestPathTree){
-        if (getNode(pathProgress).leftChild == -1 && treeStack.size() == 0){
-            return true;
-        }
-        return false;
-    } else {
-        return path.size() - 1 == pathProgress;
-    }
+bool Triangulation::finished(){
+    return path.size() - 1 == pathProgress;
 }
 
-Edge Triangulation::getNextEdge(bool shortestPathTree, SparseShortestPathTree * sspt){
-    if (shortestPathTree){
-        Node cur = getNode(pathProgress);
-        std::cout << cur.id << " " << cur.leftChild << " " << cur.rightChild << std::endl;
-        Node next;
+Edge Triangulation::getNextEdge(){
 
-        // Degree 3 node found, save it for later
-        if (cur.rightChild != -1){
-            next = getNode(cur.rightChild);
+    Node cur = getNode(path[pathProgress][0]);
+    Node next = getNode(path[pathProgress + 1][0]);
 
-            if (sspt->currentDtn->rightChild != -1){
-                sspt->setCurrentDtn(&sspt->degree3Nodes[sspt->currentDtn->rightChild]);
-            } else {
-                // Hack a special kind of degreeThreeNode together, only used for the min/max/current deque which is all the same value for this leaf.
-                DegreeThreeNode temp = {-1, -1, sspt->point2Zero, -1, -1, -1, 0, 0, sspt->point2Zero, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1};
-                sspt->setCurrentDtn(&temp);
-            }
-
-            if (sspt->currentDtn->leftChild != -1){
-                treeStack.push_back(std::tuple<int, Point_2, DegreeThreeNode*>{cur.id, sspt->getApex(), &sspt->degree3Nodes[sspt->currentDtn->leftChild]});
-            } else {
-                DegreeThreeNode temp = {-1, -1, sspt->point2Zero, -1, -1, -1, 0, 0, sspt->point2Zero, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1, sspt->currentDtn->deque + 1};
-                treeStack.push_back(std::tuple<int, Point_2, DegreeThreeNode*>{cur.id, sspt->getApex(), &temp});
-            }
-
-        } else if (cur.leftChild != -1){
-            next = getNode(cur.leftChild);
-        } else {
-            std::tuple<int, Point_2, DegreeThreeNode*> node = treeStack.back();
-            treeStack.pop_back();
-
-            cur = getNode(std::get<0>(node));
-            next = getNode(cur.leftChild);
-            sspt->setApex(std::get<1>(node));
-            sspt->setCurrentDtn(std::get<2>(node));
-        }
-
-        pathProgress = next.id;
-        return commonEdge(cur, next);
-    } else {
-        Node cur = getNode(path[pathProgress][0]);
-        Node next = getNode(path[pathProgress + 1][0]);
-
-        pathProgress++;
-        return commonEdge(cur, next);
-    }
+    pathProgress++;
+    return commonEdge(cur, next);
 }
 
 Edge Triangulation::commonEdge(Node a, Node b){

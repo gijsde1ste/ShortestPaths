@@ -28,6 +28,8 @@ struct Edge{
     Point_2 a, b;
 };
 
+const Edge edgeZero = Edge{{0,0}, {0,0}};
+
 struct Triangle{
     Point_2 a, b, c;
 };

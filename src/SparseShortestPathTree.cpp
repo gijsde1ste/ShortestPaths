@@ -2,6 +2,12 @@
 
 SparseShortestPathTree::SparseShortestPathTree(std::vector<DegreeThreeNode> degreeThreeNodes)
 {
+    outputCounter = 0;
+    outputParent = -1;
+    out.open("result.tpie", tpie::access_write);
+    out.truncate(0);
+
+
     point2Zero.x = 0; point2Zero.y = 0;
     degree3Nodes = degreeThreeNodes;
     cuspCount = degree3Nodes.size();
@@ -35,7 +41,7 @@ SparseShortestPathTree::SparseShortestPathTree(std::vector<DegreeThreeNode> degr
     currentCusp = currentDtn->nLeftChilds;
     cusp = cusps[currentCusp];
 
-    geodesic = new tpie::stack<Point_2>();
+    //geodesic = new tpie::stack<Point_2>();
 
     for (auto i = degree3Nodes.begin(); i != degree3Nodes.end(); ++i){
         std::cout << i->id << " " << i->leftChild << " " << i->rightChild << " " << i->parentNode << " "  << i->vertex.x << " " << i->vertex.y
@@ -118,8 +124,33 @@ void SparseShortestPathTree::extend(Edge e){
     } else if (b == peekBack()){
         extend(a, true);
     } else {
-        std::cout << a.x << " " << a.y << " " << b.x << " " << b.y << std::endl;
-        std::cout << peekFront().x << " " << peekFront().y << " " << peekBack().x << " " << peekBack().y << std::endl;
+        // This should only happen if degree3Node had changed and no points have been added to those queues
+        // In that case we should start again with the correct points
+        // One of the points should be at the end of one of the deques, so locate that
+        cusp = cusps[currentDtn->deque];
+        for (auto i = cusps.begin(); i != cusps.end(); ++i){
+            if ((*i)->peekFront() == a){
+                apex = a;
+                cusp->pushFront(a);
+                cusp->pushBack(b);
+                break;
+            } else if ((*i)->peekBack() == a){
+                apex = a;
+                cusp->pushBack(a);
+                cusp->pushFront(b);
+                break;
+            } else if ((*i)->peekFront() == b){
+                apex = b;
+                cusp->pushFront(b);
+                cusp->pushBack(a);
+                break;
+            } else if ((*i)->peekBack() == b){
+                apex = b;
+                cusp->pushBack(b);
+                cusp->pushFront(a);
+                break;
+            }
+        }
     }
 }
 
@@ -168,7 +199,6 @@ void SparseShortestPathTree::extend(Point_2 p, bool front) {
 
     Point_2 a, b;
     bool passedApex = false;
-
 
     // Only needs to be done when there's a currentDtn (we're not doing the last leaf bit below lowest dtns)
     if (currentDtn->id != -1){
@@ -228,7 +258,12 @@ void SparseShortestPathTree::extend(Point_2 p, bool front) {
                     cusp->pushFront(p);
                     break;
                 } else {
-                    geodesic->push(a);
+                    ssptResultPoint srp = {a, outputParent};
+                    out.write(srp);
+                    outputParent = outputCounter;
+                    outputCounter++;
+
+                    //geodesic->push(a);
                 }
             }
         }
@@ -260,7 +295,11 @@ void SparseShortestPathTree::extend(Point_2 p, bool front) {
                     cusp->pushBack(p);
                     break;
                 } else {
-                    geodesic->push(a);
+                    ssptResultPoint srp = {a, outputParent};
+                    out.write(srp);
+                    outputParent = outputCounter;
+                    outputCounter++;
+                    //geodesic->push(a);
                 }
             }
         }
@@ -282,7 +321,7 @@ void SparseShortestPathTree::extendFinalStep(Point_2 target){
 
             if (p == apex) apexFound = true;
 
-            if (apexFound) geodesic->push(p);
+            //if (apexFound) geodesic->push(p);
         }
     }
     else
@@ -294,7 +333,7 @@ void SparseShortestPathTree::extendFinalStep(Point_2 target){
 
             if (p == apex) apexFound = true;
 
-            if (apexFound) geodesic->push(p);
+            //if (apexFound) geodesic->push(p);
         }
     }
 }
@@ -348,10 +387,6 @@ int SparseShortestPathTree::getCuspCount()
     return cuspCount;
 }
 
-int SparseShortestPathTree::getStackCount()
-{
-    return stackCount;
-}
 
 void SparseShortestPathTree::setCurrentDtn(DegreeThreeNode * dtn){
     currentDtn = dtn;

@@ -45,27 +45,28 @@ class Triangulation
         void close();
         Node getNode(int index, bool inOrOut = false);
         Node getRoot();
-        Edge getNextEdge(bool shortestPathTree = false, SparseShortestPathTree * sspt = nullptr);
+        Edge getNextEdge();
         Edge commonEdge(Node a, Node b);
         void createPath(Point_2 target);
         void createPath(std::vector<Point_2> targets);
         Point_2 getRandomPoint();
         bool containsPoint(Point_2 points[3], Point_2 p);
         std::vector<int> containsPoint(Point_2 points[3], std::vector<Point_2> targets);
-        bool finished(bool shortestPathTree = false);
+        bool finished();
         std::vector<Triangle> copyPolygon();
         void setPathProgress(int progress);
         std::vector<DegreeThreeNode> SplitVertices;
 
     protected:
-
-    private:
         tpie::uncompressed_stream<Node> in;
         tpie::uncompressed_stream<Node> out;
         std::vector<DegreeThreeNode> degree3Nodes;
-        std::vector<std::tuple<int, Point_2, DegreeThreeNode*>> treeStack;
+        std::vector<std::tuple<int, Point_2, DegreeThreeNode*, int>> treeStack;
         std::vector<std::vector<int>> path;
         int pathProgress;
+
+    private:
+
 };
 
 #endif // TRIANGULATION_H

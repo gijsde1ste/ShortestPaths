@@ -1,12 +1,5 @@
 #include "internal_triangulation.h"
 
-internal_triangulation::internal_triangulation()
-{
-    path = std::vector<int>();
-    pathProgress = 0;
-    srand(time(NULL));
-}
-
 void  internal_triangulation::open(std::string file)
 {
     in.open(file);
@@ -56,54 +49,31 @@ void internal_triangulation::createPath(Point_2 target){
 
     // construct the path from n to the source (root)
     // its possible we find a triangle closer to the root that also contains the target point
-    path.push_back(n.postOrder);
+    std::vector<int> step;
+    step.push_back(n.postOrder);
+    path.push_back(step);
+
     while (n.parent != -1){
         n = triangulation[n.parent];
         // Check if parent contains target point, if so this is a shorter path to the root
         if (containsPoint(n.points, target)) {
             path.clear();
         }
-        path.push_back(n.postOrder);
+        step.clear();
+        step.push_back(n.postOrder);
+        path.push_back(step);
     }
 
     // Orient away from source
     std::reverse(path.begin(), path.end());
 }
 
-bool internal_triangulation::finished(){
-    return path.size() - 1 == pathProgress;
-}
-
 Edge internal_triangulation::getNextEdge(){
-    Node cur = triangulation[path[pathProgress]];
-    Node next = triangulation[path[pathProgress + 1]];
+    Node cur = triangulation[path[pathProgress][0]];
+    Node next = triangulation[path[pathProgress + 1][0]];
 
     pathProgress++;
     return commonEdge(cur, next);
-}
-
-Edge internal_triangulation::commonEdge(Node a, Node b){
-    Edge e;
-    bool foundFirst = false;
-
-    for (int i = 0; i < 3; i++){
-        if (containsPoint(b.points, a.points[i])) {
-            if (!foundFirst){
-                e.a = a.points[i];
-                foundFirst = true;
-            } else {
-                e.b = a.points[i];
-            }
-        }
-    }
-
-    //std::cout << e.a.x << " " << e.a.y << " " << e.b.x << " " << e.b.y << std::endl;
-
-    return e;
-}
-
-bool internal_triangulation::containsPoint(Point_2 points[3], Point_2 p){
-    return (p == points[0] || p == points[1] || p == points[2]);
 }
 
 std::vector<Triangle> internal_triangulation::copyPolygon(){

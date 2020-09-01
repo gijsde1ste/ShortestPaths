@@ -48,6 +48,40 @@ void Renderer::draw(funnel f, std::vector<Triangle> t){
     drawEnd();
 }
 
+void Renderer::draw(std::vector<Triangle> t, SptInternal * spt){
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    for (auto i = t.begin(); i != t.end(); i++){
+        SDL_RenderDrawLine(renderer, (*i).a.x * 300, (*i).a.y * 300, (*i).b.x * 300, (*i).b.y * 300);
+        SDL_RenderDrawLine(renderer, (*i).b.x * 300, (*i).b.y * 300, (*i).c.x * 300, (*i).c.y * 300);
+        SDL_RenderDrawLine(renderer, (*i).c.x * 300, (*i).c.y * 300, (*i).a.x * 300, (*i).a.y * 300);
+    }
+
+    int count = 0;
+    while (count < spt->targetCount()){
+
+        std::vector<Point_2> path = spt->queryTarget(count);
+
+        Point_2 p1 = path.back();
+        path.pop_back();
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+        while (!path.empty()){
+
+            Point_2 p2 = path.back();
+            path.pop_back();
+
+            SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
+            p1 = p2;
+        }
+
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        SDL_Rect rect = {p1.x * 300 - 5, p1.y * 300 - 5, 10, 10};
+        SDL_RenderFillRect(renderer, &rect);
+
+        count++;
+    }
+}
+
 void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std::vector<Point_2> targets, std::vector<DegreeThreeNode> splitVertices){
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -73,7 +107,25 @@ void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std:
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 
-    if (sspt->geodesic->size() > 0){
+    tpie::uncompressed_stream<ssptResultPoint> in;
+    in.open("result.tpie");
+
+    while(in.can_read()){
+        ssptResultPoint srp = in.read();
+        std::cout << srp.point.x << " " << srp.point.y << " " << srp.parent << std::endl;
+        if (srp.parent != -1){
+            Point_2 p1 = srp.point;
+            tpie::stream_size_type offset = in.offset();
+            in.seek(srp.parent);
+            ssptResultPoint srp2 = in.read();
+            Point_2 p2 = srp2.point;
+            in.seek(offset);
+
+            SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
+        }
+    }
+
+    /*if (sspt->geodesic->size() > 0){
         Point_2 p1 = sspt->geodesic->pop();
         Point_2 p2;
 
@@ -82,7 +134,7 @@ void Renderer::draw(SparseShortestPathTree * sspt, std::vector<Triangle> t, std:
             SDL_RenderDrawLine(renderer, p1.x * 300, p1.y * 300, p2.x * 300, p2.y * 300);
             p1 = p2;
         }
-    }
+    }*/
 
     /*SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     std::cout << "stacks: " << sspt->stacks.size() << " Deques: " << sspt->cusps.size() << std::endl;

@@ -1,14 +1,15 @@
 #ifndef INTERNAL_DEQUE_H
 #define INTERNAL_DEQUE_H
 
+#include <definition.h>
 
 namespace tpie{
 template <typename T>
 class internal_deque: public linear_memory_base<internal_deque<T> >
 {
     array<T> elements;
-    size_t first, last;
     public:
+        size_t first, last;
         internal_deque(size_t size = 0) : first(size / 2 + 1), last(size / 2) { elements.resize(size); }
 
         inline int length(){
@@ -16,7 +17,7 @@ class internal_deque: public linear_memory_base<internal_deque<T> >
         }
 
         inline const T & index(int i){
-            return elements[first + i];
+            return elements[i];
         }
 
         inline void pushFront(T val){
@@ -45,12 +46,30 @@ class internal_deque: public linear_memory_base<internal_deque<T> >
             return elements[last];
         }
 
-        inline void undo(){
-
+        inline void undoAdd(bool front, T x){
+            if (front){
+                elements[first] = x;
+                first++;
+            } else {
+                elements[last] = x;
+                last--;
+            }
         }
 
-        inline void split(int index, bool front){
+        inline void undoSplit(bool front, int i){
+            if (front){
+                first = i;
+            } else{
+                last = i;
+            }
+        }
 
+        inline void split(bool front, int i){
+            if (front){
+                first = first + i;
+            } else {
+                last = last - i;
+            }
         }
 
         inline size_t size(){
@@ -59,6 +78,15 @@ class internal_deque: public linear_memory_base<internal_deque<T> >
 
         inline bool empty() {
             return size() == 0;
+        }
+
+        inline void print(){
+            std::cout << "------" << std::endl;
+            for (int i = first; i <= last; i++){
+                std::cout << elements[i].point.x << " " << elements[i].point.y << std::endl;
+            }
+
+            std::cout << "------" << std::endl;
         }
 
     protected:
