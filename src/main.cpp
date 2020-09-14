@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <definition.h>
 #include <SimpleShortestPathExperiment.h>
+#include <SptExperiment.h>
 #include <SparseShortestPathTree.h>
 #include <SptInternal.h>
 #include <Renderer.h>
@@ -30,6 +31,9 @@ void run(int argc, char** argv){
     if (type == "shortestPath"){
         SimpleShortestPathExperiment experiment;
         experiment.run(argc, argv);
+    } else if (type == "internal"){
+        SptExperiment experiment;
+        experiment.run(argc, argv);
     } else if (type == "debug") {
         std::vector<Point_2> targets = getTargets();
         for (auto i = targets.begin(); i != targets.end(); ++i){
@@ -45,25 +49,6 @@ void run(int argc, char** argv){
                 std::cout << n.id << " " << n.postOrder << " " << n.leftChild << " " << n.rightChild << std::endl;
         }
         in.close();
-    } else if (type == "internal"){
-        SptInternalTriangulation t;
-        t.open("test.tpie");
-        Node n = t.getRoot();
-        t.setPathProgress(n.postOrder);
-
-        SptInternal spt(t.size());
-        spt.extendStart(n, t.getNextEdge());
-        while(!t.finished()){
-            spt.extend(t.getNextEdge());
-        }
-        spt.print();
-        spt.generateRandomTargets(10);
-
-        Renderer r;
-        r.drawStart();
-        r.draw(t.copyPolygon(), &spt);
-        r.drawEnd();
-
     } else {
 
         // Temporary development default thingy

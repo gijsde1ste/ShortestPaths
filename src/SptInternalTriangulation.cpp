@@ -15,12 +15,12 @@ Edge SptInternalTriangulation::getNextEdge(){
     } else {
         // No more available children, backtrack till we find a split where we have not yet visited left and right childs
         pathProgress = cur.parent;
-        std::cout << "backTracking" << std::endl;
+        //std::cout << "backTracking" << std::endl;
         return edgeZero;
     }
 
     pathProgress = next.postOrder;
-    std::cout << "current node " << cur.postOrder << " next node " << next.postOrder << std::endl;
+    //std::cout << "current node " << cur.postOrder << " next node " << next.postOrder << std::endl;
     return commonEdge(cur, next);
 }
 

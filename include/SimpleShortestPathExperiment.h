@@ -33,10 +33,11 @@ class SimpleShortestPathExperiment
 
     protected:
         void writeResults();
-
-    private:
         std::vector<Timing> timings;
         std::string experimentName;
+
+    private:
+
 };
 
 #endif // SIMPLESHORTESTPATHEXPERIMENT_H

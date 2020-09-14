@@ -94,7 +94,7 @@ class SptInternal: public base_funnel
                 result[count] = {e.a, 0};
                 count++;
             }
-            cusp.print();
+            //cusp.print();
         }
 
         inline void extend(Edge e){
@@ -103,7 +103,7 @@ class SptInternal: public base_funnel
 
             // if we get boges Edge it means we should undo twice
             if (a == point2Zero && b == point2Zero){
-                std::cout << "Undoing twice" << std::endl;
+                //std::cout << "Undoing twice" << std::endl;
                 undo();
                 undo();
             }
@@ -124,11 +124,10 @@ class SptInternal: public base_funnel
                 }
             }
 
-            cusp.print();
+            //cusp.print();
         }
 
         inline void extend(Point_2 p, bool front) {
-            std::cout << "10" << std::endl;
             sptResultPoint a, b;
             bool passedApex = false;
             int i = 0;
@@ -140,7 +139,6 @@ class SptInternal: public base_funnel
                     if (cusp.size() > i + 1){
                         b = cusp.index(cusp.first + i + 1);
                     } else {
-                        std::cout << "1" << std::endl;
                         // Rare case if a new point is added that is only tangent with the very last point
                         addHistory(true, cusp.first);
                         cusp.split(true, i);
@@ -156,7 +154,6 @@ class SptInternal: public base_funnel
 
                     if (!passedApex){
                         if (leftTurn(p, a.point, b.point)){
-                            std::cout << "2" << std::endl;
                             addHistory(true, cusp.first);
                             cusp.split(true, i);
                             addHistory(true, cusp.index(cusp.first - 1));
@@ -167,7 +164,6 @@ class SptInternal: public base_funnel
                         }
                     } else {
                         if (rightTurn(p, a.point, b.point)){
-                            std::cout << "3" << std::endl;
                             addHistory(true, cusp.first);
                             cusp.split(true, i);
                             addHistory(true, cusp.index(cusp.first - 1));
@@ -188,7 +184,6 @@ class SptInternal: public base_funnel
                         b = cusp.index(cusp.last - i - 1);
                     } else {
                         // Rare case if a new point is added that is only tangent with the very last point
-                        std::cout << "5" << std::endl;
                         addHistory(false, cusp.last);
                         cusp.split(false, i);
                         addHistory(false, cusp.index(cusp.last + 1));
@@ -203,7 +198,6 @@ class SptInternal: public base_funnel
 
                     if (!passedApex){
                         if (rightTurn(p, a.point, b.point)){
-                            std::cout << "6" << std::endl;
                             addHistory(false, cusp.last);
                             cusp.split(false, i);
                             addHistory(false, cusp.index(cusp.last + 1));
@@ -214,7 +208,6 @@ class SptInternal: public base_funnel
                         }
                     } else {
                         if (leftTurn(p, a.point, b.point)){
-                            std::cout << "7" << std::endl;
                             addHistory(false, cusp.last);
                             cusp.split(false, i);
                             addHistory(false, cusp.index(cusp.last + 1));
