@@ -28,7 +28,7 @@ struct DegreeThreeNode
     // Used to keep track how many left/right childs a node has, to determine which deques to use during funnel splits
     int nLeftChilds, nRightChilds;
     Point_2 parent;
-    int minDeque, maxDeque, deque;
+    int minDeque, maxDeque, deque, indexId;
 };
 
 class SparseShortestPathTree;
@@ -48,7 +48,6 @@ class Triangulation
         Edge getNextEdge();
         Edge commonEdge(Node a, Node b);
         void createPath(Point_2 target);
-        void createPath(std::vector<Point_2> targets);
         Point_2 getRandomPoint();
         bool containsPoint(Point_2 points[3], Point_2 p);
         std::vector<int> containsPoint(Point_2 points[3], std::vector<Point_2> targets);

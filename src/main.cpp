@@ -34,22 +34,7 @@ void run(int argc, char** argv){
     } else if (type == "internal"){
         SptExperiment experiment;
         experiment.run(argc, argv);
-    } else if (type == "debug") {
-        std::vector<Point_2> targets = getTargets();
-        for (auto i = targets.begin(); i != targets.end(); ++i){
-            std::cout << (*i).x << " " << (*i).y << std::endl;
-        }
-
-        tpie::uncompressed_stream<Node> in;
-        in.open("leafToRoot.tpie");
-
-        while(in.can_read()){
-            Node n = in.read();
-            //if (n.rightChild != -1)
-                std::cout << n.id << " " << n.postOrder << " " << n.leftChild << " " << n.rightChild << std::endl;
-        }
-        in.close();
-    } else {
+    } else if (type == "sspt") {
 
         // Temporary development default thingy
         std::vector<Point_2> targets = getTargets();
@@ -64,12 +49,17 @@ void run(int argc, char** argv){
         t.open("leafToRoot.tpie");
         Node n = t.getRoot();
         t.setPathProgress(n.id);
+        SparseShortestPathTree sspt(t.SplitVertices);
 
-        SparseShortestPathTree sspt(t.openUserData());
         sspt.extendStart(n, t.getNextEdge(&sspt));
+        int count = 0;
         while(!t.finished()){
-            sspt.extend(t.getNextEdge(&sspt));
+            Edge e = t.getNextEdge(&sspt);
+            //if (count == 77) break;
+            sspt.extend(e);
+            count++;
         }
+        //sspt.printFunnel();
         sspt.out.close();
 
         Renderer r;

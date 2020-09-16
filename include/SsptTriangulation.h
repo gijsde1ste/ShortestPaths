@@ -8,6 +8,9 @@ class SsptTriangulation: public Triangulation
     public:
         bool finished();
         Edge getNextEdge(SparseShortestPathTree * sspt);
+        void createPath(std::vector<Point_2> targets);
+
+        std::vector<DegreeThreeNode> tempNodes;
 
     protected:
 
